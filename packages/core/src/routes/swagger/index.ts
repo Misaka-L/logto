@@ -149,6 +149,7 @@ const identifiableEntityNames = Object.freeze([
   'organization-role',
   'organization-scope',
   'organization-invitation',
+  'custom-ui-assets',
 ]);
 
 /** Additional tags that cannot be inferred from the path. */
@@ -156,6 +157,7 @@ const additionalTags = Object.freeze(
   condArray<string>(
     'Organization applications',
     EnvSet.values.isDevFeaturesEnabled && 'Security',
+    EnvSet.values.isDevFeaturesEnabled && 'Custom UI assets',
     'Organization users'
   )
 );
