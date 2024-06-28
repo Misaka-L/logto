@@ -7,6 +7,7 @@ import mime from 'mime-types';
 import unzipper, { type Entry } from 'unzipper';
 import { object, z } from 'zod';
 
+import { EnvSet } from '#src/env-set/index.js';
 import RequestError from '#src/errors/RequestError/index.js';
 import koaGuard from '#src/middleware/koa-guard.js';
 import SystemContext from '#src/tenants/SystemContext.js';
@@ -22,6 +23,11 @@ import { checkEntryForDirectoryOrSystemFile, removeZipRootDirectory } from './ut
 export default function customUiAssetsRoutes<T extends ManagementApiRouter>(
   ...[router, { queries }]: RouterInitArgs<T>
 ) {
+  // TODO: Remove
+  if (!EnvSet.values.isDevFeaturesEnabled) {
+    return;
+  }
+
   router.post(
     '/sign-in-exp/custom-ui-assets',
     koaGuard({
