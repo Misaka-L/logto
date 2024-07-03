@@ -1,4 +1,5 @@
 import { type SubjectToken } from '@logto/schemas';
+import { createMockUtils } from '@logto/shared/esm';
 import { type KoaContextWithOIDC, errors } from 'oidc-provider';
 import Sinon from 'sinon';
 
@@ -6,9 +7,14 @@ import { mockApplication } from '#src/__mocks__/index.js';
 import { createOidcContext } from '#src/test-utils/oidc-provider.js';
 import { MockTenant } from '#src/test-utils/tenant.js';
 
-import { buildHandler } from './token-exchange.js';
-
 const { jest } = import.meta;
+const { mockEsm } = createMockUtils(jest);
+
+const { handleActorToken } = mockEsm('./actor-token.js', () => ({
+  handleActorToken: jest.fn().mockResolvedValue({ accountId: undefined }),
+}));
+
+const { buildHandler } = await import('./index.js');
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = async () => {};

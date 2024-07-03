@@ -5,6 +5,7 @@ import {
   LogResult,
   jwtCustomizer as jwtCustomizerLog,
   type CustomJwtFetcher,
+  GrantType,
 } from '@logto/schemas';
 import { generateStandardId } from '@logto/shared';
 import { conditional, trySafe } from '@silverhand/essentials';
@@ -17,6 +18,8 @@ import { type LogtoConfigLibrary } from '#src/libraries/logto-config.js';
 import { LogEntry } from '#src/middleware/koa-audit-log.js';
 import type Libraries from '#src/tenants/Libraries.js';
 import type Queries from '#src/tenants/Queries.js';
+
+import { tokenExchangeActGuard } from './grants/token-exchange/types.js';
 
 /**
  * For organization API resource feature, add extra token claim `organization_id` to the
@@ -44,6 +47,35 @@ export const getExtraTokenClaimsForOrganizationApiResource = async (
   }
 
   return { organization_id: organizationId };
+};
+
+/**
+ * Access tokens issued by the token exchange grant type may have extra `act` claim.
+ * This function extracts the `act` claim from the token and returns it as an extra claim.
+ */
+export const getExtraTokenClaimsForTokenExchange = async (
+  ctx: KoaContextWithOIDC,
+  token: unknown
+): Promise<UnknownObject | undefined> => {
+  const isAccessToken = token instanceof ctx.oidc.provider.AccessToken;
+
+  // Only handle access tokens
+  if (!isAccessToken) {
+    return;
+  }
+
+  // Only handle token exchange grant type
+  if (token.gty !== GrantType.TokenExchange) {
+    return;
+  }
+
+  const result = tokenExchangeActGuard.safeParse(token.extra);
+
+  if (!result.success) {
+    return;
+  }
+
+  return result.data;
 };
 
 /* eslint-disable complexity */

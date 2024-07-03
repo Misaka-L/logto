@@ -42,6 +42,7 @@ import defaults from './defaults.js';
 import {
   getExtraTokenClaimsForJwtCustomization,
   getExtraTokenClaimsForOrganizationApiResource,
+  getExtraTokenClaimsForTokenExchange,
 } from './extra-token-claims.js';
 import { registerGrants } from './grants/index.js';
 import {
@@ -224,6 +225,8 @@ export default function initOidc(
     },
     extraParams: Object.values(ExtraParamsKey),
     extraTokenClaims: async (ctx, token) => {
+      const tokenExchangeClaims = await getExtraTokenClaimsForTokenExchange(ctx, token);
+
       const organizationApiResourceClaims = await getExtraTokenClaimsForOrganizationApiResource(
         ctx,
         token
@@ -237,11 +240,12 @@ export default function initOidc(
         cloudConnection,
       });
 
-      if (!organizationApiResourceClaims && !jwtCustomizedClaims) {
+      if (!organizationApiResourceClaims && !jwtCustomizedClaims && !tokenExchangeClaims) {
         return;
       }
 
       return {
+        ...tokenExchangeClaims,
         ...organizationApiResourceClaims,
         ...jwtCustomizedClaims,
       };
