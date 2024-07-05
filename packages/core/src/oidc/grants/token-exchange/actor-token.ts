@@ -3,27 +3,26 @@ import { type KoaContextWithOIDC, errors } from 'oidc-provider';
 
 import assertThat from '#src/utils/assert-that.js';
 
+import { TokenExchangeTokenType } from './types.js';
+
 const { InvalidGrant } = errors;
 
 /**
  * Handles the `actor_token` and `actor_token_type` parameters,
  * if both are present and valid, the `accountId` of the actor token is returned.
  */
-export const handleActorToken = async (
-  ctx: KoaContextWithOIDC
-): Promise<{ accountId?: string }> => {
+export const handleActorToken = async (ctx: KoaContextWithOIDC): Promise<{ actorId?: string }> => {
   const { params, provider } = ctx.oidc;
   const { AccessToken } = provider;
 
   assertThat(params, new InvalidGrant('parameters must be available'));
   assertThat(
-    !params.actor_token ||
-      params.actor_token_type === 'urn:ietf:params:oauth:token-type:access_token',
+    !params.actor_token || params.actor_token_type === TokenExchangeTokenType.AccessToken,
     new InvalidGrant('unsupported actor token type')
   );
 
   if (!params.actor_token) {
-    return { accountId: undefined };
+    return { actorId: undefined };
   }
 
   // The actor token should have `openid` scope (RFC 0005), and a token with this scope is an opaque token.
@@ -35,5 +34,5 @@ export const handleActorToken = async (
     new InvalidGrant('actor token must have openid scope')
   );
 
-  return { accountId: actorToken.accountId };
+  return { actorId: actorToken.accountId };
 };

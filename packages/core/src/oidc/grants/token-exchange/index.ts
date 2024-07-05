@@ -24,7 +24,7 @@ import {
 } from '../../resource.js';
 
 import { handleActorToken } from './actor-token.js';
-import { type TokenExchangeAct } from './types.js';
+import { TokenExchangeTokenType, type TokenExchangeAct } from './types.js';
 
 const { InvalidClient, InvalidGrant, AccessDenied } = errors;
 
@@ -70,7 +70,7 @@ export const buildHandler: (
     new InvalidClient('third-party applications are not allowed for this grant type')
   );
   assertThat(
-    params.subject_token_type === 'urn:ietf:params:oauth:token-type:access_token',
+    params.subject_token_type === TokenExchangeTokenType.AccessToken,
     new InvalidGrant('unsupported subject token type')
   );
 
@@ -203,7 +203,7 @@ export const buildHandler: (
   }
 
   // Handle the actor token
-  const { accountId: actorId } = await handleActorToken(ctx);
+  const { actorId } = await handleActorToken(ctx);
   if (actorId) {
     // The JWT generator in node-oidc-provider only recognizes a fixed list of claims,
     // to add other claims to JWT, the only way is to return them in `extraTokenClaims` function.

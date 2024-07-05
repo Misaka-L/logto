@@ -225,20 +225,18 @@ export default function initOidc(
     },
     extraParams: Object.values(ExtraParamsKey),
     extraTokenClaims: async (ctx, token) => {
-      const tokenExchangeClaims = await getExtraTokenClaimsForTokenExchange(ctx, token);
-
-      const organizationApiResourceClaims = await getExtraTokenClaimsForOrganizationApiResource(
-        ctx,
-        token
-      );
-
-      const jwtCustomizedClaims = await getExtraTokenClaimsForJwtCustomization(ctx, token, {
-        envSet,
-        queries,
-        libraries,
-        logtoConfigs,
-        cloudConnection,
-      });
+      const [tokenExchangeClaims, organizationApiResourceClaims, jwtCustomizedClaims] =
+        await Promise.all([
+          getExtraTokenClaimsForTokenExchange(ctx, token),
+          getExtraTokenClaimsForOrganizationApiResource(ctx, token),
+          getExtraTokenClaimsForJwtCustomization(ctx, token, {
+            envSet,
+            queries,
+            libraries,
+            logtoConfigs,
+            cloudConnection,
+          }),
+        ]);
 
       if (!organizationApiResourceClaims && !jwtCustomizedClaims && !tokenExchangeClaims) {
         return;

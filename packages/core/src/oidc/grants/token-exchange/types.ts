@@ -7,3 +7,7 @@ export const tokenExchangeActGuard = z.object({
 });
 
 export type TokenExchangeAct = z.infer<typeof tokenExchangeActGuard>;
+
+export enum TokenExchangeTokenType {
+  AccessToken = 'urn:ietf:params:oauth:token-type:access_token',
+}
