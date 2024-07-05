@@ -16,7 +16,7 @@ import { type WithInteractionDetailsContext } from '../middleware/koa-interactio
 import { type WithInteractionHooksContext } from '../middleware/koa-interaction-hooks.js';
 
 const { jest } = import.meta;
-const { mockEsm } = createMockUtils(jest);
+const { mockEsm, mockEsmWithActual } = createMockUtils(jest);
 
 const getAuthorizationUrlMock = jest.fn();
 const getIssuerMock = jest.fn();
@@ -29,6 +29,7 @@ const findUserByEmailMock = jest.fn();
 const insertUserMock = jest.fn().mockResolvedValue([{ id: 'foo' }, { organizations: [] }]);
 const generateUserIdMock = jest.fn().mockResolvedValue('foo');
 const getAvailableSsoConnectorsMock = jest.fn();
+const getSsoConnectorsByIdMock = jest.fn();
 
 class MockOidcSsoConnector extends OidcSsoConnector {
   override getAuthorizationUrl = getAuthorizationUrlMock;
@@ -43,7 +44,7 @@ mockEsm('./interaction.js', () => ({
 const {
   getSingleSignOnSessionResult: getSingleSignOnSessionResultMock,
   assignSingleSignOnAuthenticationResult: assignSingleSignOnAuthenticationResultMock,
-} = mockEsm('./single-sign-on-session.js', () => ({
+} = await mockEsmWithActual('./single-sign-on-session.js', () => ({
   getSingleSignOnSessionResult: jest.fn(),
   assignSingleSignOnAuthenticationResult: jest.fn(),
 }));
@@ -92,6 +93,7 @@ describe('Single sign on util methods tests', () => {
       },
       ssoConnectors: {
         getAvailableSsoConnectors: getAvailableSsoConnectorsMock,
+        getSsoConnectorById: getSsoConnectorsByIdMock,
       },
     }
   );
@@ -115,8 +117,10 @@ describe('Single sign on util methods tests', () => {
     };
 
     it('should throw an error if the connector config is invalid', async () => {
+      getSsoConnectorsByIdMock.mockResolvedValueOnce(mockSsoConnector);
+
       await expect(
-        getSsoAuthorizationUrl(mockContext, tenant, mockSsoConnector, payload)
+        getSsoAuthorizationUrl(mockContext, tenant, mockSsoConnector.id, payload)
       ).rejects.toThrow(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         expect.objectContaining({ status: 500, code: `connector.invalid_config` })
@@ -124,10 +128,11 @@ describe('Single sign on util methods tests', () => {
     });
 
     it('should call the connector getAuthorizationUrl method', async () => {
+      getSsoConnectorsByIdMock.mockResolvedValueOnce(wellConfiguredSsoConnector);
       getAuthorizationUrlMock.mockResolvedValueOnce('https://example.com');
 
       await expect(
-        getSsoAuthorizationUrl(mockContext, tenant, wellConfiguredSsoConnector, payload)
+        getSsoAuthorizationUrl(mockContext, tenant, wellConfiguredSsoConnector.id, payload)
       ).resolves.toBe('https://example.com');
     });
   });

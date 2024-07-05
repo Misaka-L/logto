@@ -61,10 +61,7 @@ export default function singleSignOnRoutes<T extends IRouterParamContext>(
       createLog(`Interaction.SignIn.Update`);
       await storeInteractionResult({ event: InteractionEvent.SignIn }, ctx, provider);
 
-      // Will throw 404 if connector not found, or not supported
-      const connectorData = await ssoConnectorsLibrary.getSsoConnectorById(connectorId);
-
-      const redirectTo = await getSsoAuthorizationUrl(ctx, tenant, connectorData, payload);
+      const redirectTo = await getSsoAuthorizationUrl(ctx, tenant, connectorId, payload);
       ctx.body = { redirectTo };
 
       return next();
